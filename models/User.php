@@ -2,103 +2,82 @@
 
 namespace app\models;
 
-class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
+use Yii;
+use yii\web\IdentityInterface;
+use yii\db\ActiveRecord;
+
+/**
+ * @property $id int
+ * @property $username string
+ * @property $display_name string
+ * @property $email string
+ */
+class User extends ActiveRecord implements IdentityInterface
 {
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_MANAGER = 'manager';
 
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
+    public function getRole()
+    {
+        $roles = Yii::$app->authManager->getRolesByUser($this->id);
+        $default_roles = Yii::$app->authManager->defaultRoles;
 
+        foreach ($roles as $key => $value) {
+            if (in_array($key, $default_roles)) {
+                unset($roles[$key]);
+            }
+        }
 
-    /**
-     * {@inheritdoc}
-     */
+        if (!empty($roles)) {
+            return array_keys($roles)[0];
+        }
+
+        return null;
+    }
+
+    public function setRole($roleName)
+    {
+        if ($this->id !== null && !empty($roleName)) {
+            $manager = Yii::$app->authManager;
+            $manager->revokeAll($this->id);
+            $manager->assign($manager->getRole($roleName), $this->id);
+        }
+    }
+
     public static function findIdentity($id)
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return self::findOne($id);
     }
 
-    /**
-     * {@inheritdoc}
-     */
+
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
         return null;
     }
 
-    /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
-     */
     public static function findByUsername($username)
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
+        return self::findOne(['username' => $username]);
+    }
 
+    public function getId()
+    {
+        return $this->getAttribute('id');
+    }
+
+    public function getAuthKey()
+    {
         return null;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getAuthKey()
-    {
-        return $this->authKey;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function validateAuthKey($authKey)
     {
-        return $this->authKey === $authKey;
+        return false;
     }
 
-    /**
-     * Validates password
-     *
-     * @param string $password password to validate
-     * @return bool if password provided is valid for current user
-     */
-    public function validatePassword($password)
+
+    public static function tableName()
     {
-        return $this->password === $password;
+        return 'user';
     }
 }

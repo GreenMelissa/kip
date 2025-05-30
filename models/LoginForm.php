@@ -2,80 +2,50 @@
 
 namespace app\models;
 
+use app\service\LdapService;
+use app\service\UserService;
 use Yii;
 use yii\base\Model;
 
-/**
- * LoginForm is the model behind the login form.
- *
- * @property-read User|null $user
- *
- */
 class LoginForm extends Model
 {
+    public const SESSION_DURATION = 3600 * 24 * 30;
+
     public $username;
     public $password;
-    public $rememberMe = true;
-
-    private $_user = false;
 
 
-    /**
-     * @return array the validation rules.
-     */
     public function rules()
     {
         return [
-            // username and password are both required
             [['username', 'password'], 'required'],
-            // rememberMe must be a boolean value
-            ['rememberMe', 'boolean'],
-            // password is validated by validatePassword()
-            ['password', 'validatePassword'],
         ];
     }
 
-    /**
-     * Validates the password.
-     * This method serves as the inline validation for password.
-     *
-     * @param string $attribute the attribute currently being validated
-     * @param array $params the additional name-value pairs given in the rule
-     */
-    public function validatePassword($attribute, $params)
+    public function attributeLabels()
     {
-        if (!$this->hasErrors()) {
-            $user = $this->getUser();
-
-            if (!$user || !$user->validatePassword($this->password)) {
-                $this->addError($attribute, 'Incorrect username or password.');
-            }
-        }
+        return [
+            'username' => 'Логин',
+            'password' => 'Пароль',
+        ];
     }
 
-    /**
-     * Logs in a user using the provided username and password.
-     * @return bool whether the user is logged in successfully
-     */
     public function login()
     {
+        $ldapService = new LdapService();
+        $userService = new UserService();
+
         if ($this->validate()) {
-            return Yii::$app->user->login($this->getUser(), $this->rememberMe ? 3600*24*30 : 0);
+            $ldapUser = $ldapService->findLdapUser($this->username);
+            if ($this->password === $ldapUser[0]['userpassword'][0] ?? null) {
+                return Yii::$app->user->login(
+                    $userService->getOrCreateUser($this->username, $ldapUser),
+                    self::SESSION_DURATION
+                );
+            } else {
+                $this->addError('password', 'Указан неверный пароль');
+            }
         }
         return false;
-    }
-
-    /**
-     * Finds user by [[username]]
-     *
-     * @return User|null
-     */
-    public function getUser()
-    {
-        if ($this->_user === false) {
-            $this->_user = User::findByUsername($this->username);
-        }
-
-        return $this->_user;
     }
 }

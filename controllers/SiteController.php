@@ -2,7 +2,9 @@
 
 namespace app\controllers;
 
+use app\models\User;
 use Yii;
+use yii\db\BaseActiveRecord;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
@@ -54,25 +56,10 @@ class SiteController extends Controller
         ];
     }
 
-    /**
-     * Displays homepage.
-     *
-     * @return string
-     */
     public function actionIndex()
     {
-        return $this->render('index');
-    }
-
-    /**
-     * Login action.
-     *
-     * @return Response|string
-     */
-    public function actionLogin()
-    {
         if (!Yii::$app->user->isGuest) {
-            return $this->goHome();
+            return $this->redirect(['task/index']);
         }
 
         $model = new LoginForm();
@@ -81,48 +68,16 @@ class SiteController extends Controller
         }
 
         $model->password = '';
-        return $this->render('login', [
+
+        return $this->render('index', [
             'model' => $model,
         ]);
     }
 
-    /**
-     * Logout action.
-     *
-     * @return Response
-     */
     public function actionLogout()
     {
         Yii::$app->user->logout();
 
         return $this->goHome();
-    }
-
-    /**
-     * Displays contact page.
-     *
-     * @return Response|string
-     */
-    public function actionContact()
-    {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->contact(Yii::$app->params['adminEmail'])) {
-            Yii::$app->session->setFlash('contactFormSubmitted');
-
-            return $this->refresh();
-        }
-        return $this->render('contact', [
-            'model' => $model,
-        ]);
-    }
-
-    /**
-     * Displays about page.
-     *
-     * @return string
-     */
-    public function actionAbout()
-    {
-        return $this->render('about');
     }
 }
