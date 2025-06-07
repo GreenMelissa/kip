@@ -10,8 +10,14 @@ class TaskSearch extends Task
     {
         $query = Task::find();
 
-        if (\Yii::$app->user->identity->getRole() !== User::ROLE_ADMIN) {
+        if (\Yii::$app->user->identity->getRole() === User::ROLE_USER) {
             $query->andWhere(['ldap_uid' => \Yii::$app->user->identity->username]);
+        }
+
+        if (\Yii::$app->user->identity->getRole() === User::ROLE_MANAGER) {
+            $query
+                ->andWhere(['creator_id' => \Yii::$app->user->identity->id])
+                ->orWhere(['ldap_uid' => \Yii::$app->user->identity->username]);
         }
 
         $this->load($params);

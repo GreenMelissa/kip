@@ -19,7 +19,7 @@ class UserController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index', 'grant-access', 'update'],
+                        'actions' => ['index', 'update'],
                         'roles' => [User::ROLE_ADMIN],
                     ],
                 ],
@@ -53,17 +53,5 @@ class UserController extends Controller
         return $this->render('update', [
             'model' => $model,
         ]);
-    }
-
-    public function actionGrantAccess($username)
-    {
-        $user = User::findOne(['username' => $username]);
-        if (!$user) {
-            $ldapService = new LdapService();
-            $userService = new UserService();
-            $user = $userService->getOrCreateUser($username, $ldapService->findLdapUser($username));
-        }
-        $user->setRole(User::ROLE_ADMIN);
-        return $this->redirect('index');
     }
 }

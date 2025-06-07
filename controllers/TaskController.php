@@ -3,16 +3,13 @@
 namespace app\controllers;
 
 use app\models\Task;
-use app\models\TaskForm;
 use app\models\TaskSearch;
 use app\models\User;
 use app\service\LdapService;
-use app\service\UserService;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\web\UploadedFile;
 
 class TaskController extends Controller
 {
@@ -107,7 +104,9 @@ class TaskController extends Controller
         $model = Task::findOne($id);
 
         if (\Yii::$app->user->identity->getRole() === User::ROLE_ADMIN ||
-            $model->ldap_uid === \Yii::$app->user->identity->username
+            $model->ldap_uid === \Yii::$app->user->identity->username ||
+            (\Yii::$app->user->identity->getRole() === User::ROLE_MANAGER &&
+                $model->creator_id === \Yii::$app->user->identity->id)
         ) {
             return $model;
         }
