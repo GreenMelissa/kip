@@ -7,10 +7,12 @@ use app\models\TaskForm;
 use app\models\TaskSearch;
 use app\models\User;
 use app\service\LdapService;
+use app\service\UserService;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\UploadedFile;
 
 class TaskController extends Controller
 {
@@ -23,11 +25,11 @@ class TaskController extends Controller
                     [
                         'allow' => true,
                         'actions' => ['create', 'delete'],
-                        'roles' => [User::ROLE_ADMIN],
+                        'roles' => [User::ROLE_ADMIN, User::ROLE_MANAGER],
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['index', 'update'],
+                        'actions' => ['index', 'update', 'execute', 'prolonge'],
                         'roles' => ['@'],
                     ],
                 ],
@@ -75,6 +77,22 @@ class TaskController extends Controller
             'model' => $model,
             'ldapUserList' => $ldapService->getLdapUserList(),
         ]);
+    }
+
+    public function actionExecute($id)
+    {
+        $model = $this->findModel($id);
+        $model->status = Task::STATUS_READY;
+        $model->save();
+        return $this->redirect('index');
+    }
+
+    public function actionProlonge($id)
+    {
+        $model = $this->findModel($id);
+        $model->status = Task::STATUS_REQUEST_FOR_PROLONGE;
+        $model->save();
+        return $this->redirect('index');
     }
 
     public function actionDelete($id)

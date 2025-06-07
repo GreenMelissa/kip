@@ -5,6 +5,7 @@
  * @var $searchModel TaskSearch
  */
 
+use app\models\Task;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use app\models\User;
@@ -21,7 +22,7 @@ $this->registerCss('.table > :not(caption) > * > * {
 
 <h1><?= $this->title ?></h1>
 
-<?php if (\Yii::$app->user->identity->getRole() === User::ROLE_ADMIN): ?>
+<?php if (\Yii::$app->user->identity->getRole() === User::ROLE_ADMIN || \Yii::$app->user->identity->getRole() === User::ROLE_MANAGER): ?>
     <a class="btn btn-primary my-3" href="<?= Url::to(['task/create']) ?>">
         Создать поручение
     </a>
@@ -35,8 +36,20 @@ $this->registerCss('.table > :not(caption) > * > * {
         $your_date = strtotime($model->active_until);
         $datediff = $your_date - $now;
 
-        if (round($datediff / (60 * 60 * 24)) < 3) {
+        if ($model->status == Task::STATUS_READY) {
+            return ['style' => 'background-color: gray;'];
+        }
+
+        if ($model->status == Task::STATUS_REQUEST_FOR_PROLONGE) {
+            return ['style' => 'background-color: #1811e8c7;'];
+        }
+
+        if (round($datediff / (60 * 60 * 24)) < 0) {
             return ['style' => 'background-color: #f77c7c;'];
+        }
+
+        if (round($datediff / (60 * 60 * 24)) < 3) {
+            return ['style' => 'background-color: #f29d2f;'];
         }
 
         if (round($datediff / (60 * 60 * 24)) < 7) {
@@ -50,6 +63,7 @@ $this->registerCss('.table > :not(caption) > * > * {
         'ldap_uid',
         'name',
         'active_until',
+        'status',
         [
             'class' => ActionColumn::class,
             'template' =>

@@ -30,6 +30,8 @@ $this->title = 'Создание поручения';
         'dateFormat' => 'yyyy-MM-dd',
 ]) ?>
 
+<?= $form->field($model, 'files[]')->fileInput(['multiple' => true]) ?>
+
 <div class="form-group">
     <?= Html::submitButton('Создать', ['class' => 'btn btn-primary']) ?>
 </div>

@@ -17,6 +17,39 @@ class User extends ActiveRecord implements IdentityInterface
     public const ROLE_ADMIN = 'admin';
     public const ROLE_MANAGER = 'manager';
 
+    public const ROLE_USER = 'user';
+
+    public $role;
+
+    public function rules()
+    {
+        return [
+            ['email', 'email'],
+            [['display_name'], 'string'],
+            ['department_id', 'exist', 'targetClass' => Department::class, 'targetAttribute' => 'id'],
+            ['role', 'in', 'range' => [User::ROLE_MANAGER, User::ROLE_USER, User::ROLE_ADMIN]],
+        ];
+    }
+
+    public function attributeLabels(): array
+    {
+        return [
+            'display_name' => 'Имя',
+            'email' => 'Email',
+            'department_id' => 'Отдел',
+            'role' => 'Роль',
+        ];
+    }
+
+    public function beforeSave($insert)
+    {
+        if ($this->role) {
+            $this->setRole($this->role);
+        }
+
+        return parent::beforeSave($insert);
+    }
+
     public function getRole()
     {
         $roles = Yii::$app->authManager->getRolesByUser($this->id);
@@ -32,7 +65,16 @@ class User extends ActiveRecord implements IdentityInterface
             return array_keys($roles)[0];
         }
 
-        return null;
+        return User::ROLE_USER;
+    }
+
+    public static function getRoleList(): array
+    {
+        return [
+            User::ROLE_USER => 'Пользователь',
+            User::ROLE_MANAGER => 'Руководитель',
+            User::ROLE_ADMIN => 'Администратор',
+        ];
     }
 
     public function setRole($roleName)
@@ -73,6 +115,11 @@ class User extends ActiveRecord implements IdentityInterface
     public function validateAuthKey($authKey)
     {
         return false;
+    }
+
+    public function getDepartment()
+    {
+        return $this->hasOne(Department::class, ['id' => 'department_id']);
     }
 
 

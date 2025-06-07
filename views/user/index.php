@@ -34,6 +34,17 @@ $this->title = 'Пользователи';
             'attribute' => 'email',
         ],
         [
+            'label' => 'Отдел',
+            'attribute' => 'department',
+        ],
+        [
+            'label' => 'Роль',
+            'attribute' => 'role',
+            'value' => function ($user) {
+               return $user['role'] ? User::getRoleList()[$user['role']] : 'Не авторизован в системе';
+            },
+        ],
+        [
             'label' => 'Админ',
             'attribute' => 'isAdmin',
             'format' => 'raw',
@@ -47,16 +58,14 @@ $this->title = 'Пользователи';
         ],
         [
             'class' => ActionColumn::class,
-            'template' => '{grant-access}',
+            'template' => '{update}',
             'buttons' => [
-                'grant-access' => function ($url, $model) {
-                    if (User::findOne(['username' => $model['uid']])?->getRole() !== User::ROLE_ADMIN) {
-                        return Html::a(
-                            '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M12 14v8H4a8 8 0 0 1 8-8Zm0-1c-3.315 0-6-2.685-6-6s2.685-6 6-6s6 2.685 6 6s-2.685 6-6 6Zm9 4h1v5h-8v-5h1v-1a3 3 0 1 1 6 0v1Zm-2 0v-1a1 1 0 1 0-2 0v1h2Z"/></svg>',
-                            Url::to(['grant-access', 'username' => $model['uid']]),
-                        );
-                    }
-                }
+                'update' => function ($url, $model) {
+                    return Html::a(
+                        '<svg aria-hidden="true" style="display:inline-block;font-size:inherit;height:1em;overflow:visible;vertical-align:-.125em;width:1em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M498 142l-46 46c-5 5-13 5-17 0L324 77c-5-5-5-12 0-17l46-46c19-19 49-19 68 0l60 60c19 19 19 49 0 68zm-214-42L22 362 0 484c-3 16 12 30 28 28l122-22 262-262c5-5 5-13 0-17L301 100c-4-5-12-5-17 0zM124 340c-5-6-5-14 0-20l154-154c6-5 14-5 20 0s5 14 0 20L144 340c-6 5-14 5-20 0zm-36 84h48v36l-64 12-32-31 12-65h36v48z"></path></svg>',
+                        Url::to(['update', 'username' => $model['uid']]),
+                    );
+                },
             ]
         ],
     ],

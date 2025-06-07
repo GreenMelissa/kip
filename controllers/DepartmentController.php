@@ -2,14 +2,16 @@
 
 namespace app\controllers;
 
+use app\models\Department;
+use app\models\DepartmentSearch;
+use app\models\Task;
+use app\models\TaskSearch;
 use app\models\User;
-use app\models\UserSearch;
 use app\service\LdapService;
-use app\service\UserService;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 
-class UserController extends Controller
+class DepartmentController extends Controller
 {
     public function behaviors()
     {
@@ -19,7 +21,7 @@ class UserController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index', 'grant-access', 'update'],
+                        'actions' => ['create', 'delete', 'index', 'update'],
                         'roles' => [User::ROLE_ADMIN],
                     ],
                 ],
@@ -29,41 +31,45 @@ class UserController extends Controller
 
     public function actionIndex()
     {
-        $searchModel = new UserSearch();
+        $searchModel = new DepartmentSearch();
 
         return $this->render('index', [
+            'searchModel' => $searchModel,
             'dataProvider' => $searchModel->search(\Yii::$app->getRequest()->getQueryParams()),
         ]);
     }
 
-    public function actionUpdate($username)
+    public function actionCreate()
     {
-        $model = User::findOne(['username' => $username]);
-        if (!$model) {
-            $ldapService = new LdapService();
-            $userService = new UserService();
-            $model = $userService->getOrCreateUser($username, $ldapService->findLdapUser($username));
-        }
-        $model->role = $model->getRole();
+        $model = new Department();
 
         if ($model->load(\Yii::$app->getRequest()->post()) && $model->validate() && $model->save()) {
             return $this->redirect('index');
         }
 
-        return $this->render('update', [
+        return $this->render('create', [
             'model' => $model,
         ]);
     }
 
-    public function actionGrantAccess($username)
+    public function actionUpdate($id)
     {
-        $user = User::findOne(['username' => $username]);
-        if (!$user) {
-            $ldapService = new LdapService();
-            $userService = new UserService();
-            $user = $userService->getOrCreateUser($username, $ldapService->findLdapUser($username));
+        $model = Department::findOne($id);
+
+        if ($model->load(\Yii::$app->getRequest()->post()) && $model->validate() && $model->save()) {
+            return $this->redirect('index');
         }
-        $user->setRole(User::ROLE_ADMIN);
+
+        return $this->render('create', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionDelete($id)
+    {
+        $model = Department::findOne($id);
+        $model->delete();
         return $this->redirect('index');
     }
+
 }

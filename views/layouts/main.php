@@ -43,6 +43,8 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
             !Yii::$app->user->isGuest ? ['label' => 'Поручения', 'url' => ['/task/index']] : '',
             !Yii::$app->user->isGuest && Yii::$app->user->identity->getRole() === User::ROLE_ADMIN ?
                 ['label' => 'Пользователи', 'url' => ['/user/index']] : '',
+            !Yii::$app->user->isGuest && Yii::$app->user->identity->getRole() === User::ROLE_ADMIN ?
+                ['label' => 'Отделы', 'url' => ['/department/index']] : '',
             !Yii::$app->user->isGuest
                 ? '<li class="nav-item">'
                     . Html::beginForm(['/site/logout'])

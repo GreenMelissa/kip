@@ -14,6 +14,7 @@ class UserSearch
             'name' => 'Имя',
             'email' => 'Email',
             'isAdmin' => 'Админ',
+            'department' => 'Отдел',
         ];
     }
 
@@ -25,11 +26,14 @@ class UserSearch
         $data = $ldapService->findLdapUser('*');
         foreach ($data as $item) {
             if ($item['uid'] ?? null) {
+                $user = User::findOne(['username' => $item['uid'][0]]);
                 $allModels[] = [
                     'uid' => $item['uid'][0],
                     'name' => $item['displayname'][0],
                     'email' => $item['mail'][0],
-                    'isAdmin' => User::findOne(['username' => $item['uid'][0]])?->getRole() === User::ROLE_ADMIN,
+                    'role' => $user?->getRole(),
+                    'department' => $user?->department?->name,
+                    'isAdmin' => $user?->getRole() === User::ROLE_ADMIN,
                 ];
             }
         }
